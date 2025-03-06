@@ -40,7 +40,7 @@ const authController = {
         }
 
         // Tìm người dùng theo email
-        const query = 'SELECT * FROM Users WHERE email = ?';
+        const query = 'SELECT * FROM users WHERE email = ?';
         connection.query(query, [email], async (err, results) => {
             if (err) {
                 return res.status(500).json({ message: 'Lỗi server', error: err });

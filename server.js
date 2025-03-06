@@ -6,6 +6,7 @@ const tripRoutes = require('./routes/trip');
 const commentRoutes = require('./routes/comment');
 const ratingRoutes = require('./routes/rating');
 
+
 // Middleware để parse JSON
 app.use(express.json());
 
@@ -15,8 +16,6 @@ app.use('/api', commentRoutes);
 app.use('/api', authRoutes);
 app.use('/api', ratingRoutes);
 
-
-// Khởi động server
-app.listen(port, () => {
-    console.log(`Server đang chạy tại http://localhost:${port}`);
+app.listen(port, '0.0.0.0', () => {
+    console.log(`Server đang chạy tại http://0.0.0.0:${port}`);
 });

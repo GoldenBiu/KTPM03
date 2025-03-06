@@ -17,7 +17,7 @@ const commentController = {
             content
         };
 
-        const query = 'INSERT INTO Comments (trip_id, user_id, content) VALUES (?, ?, ?)';
+        const query = 'INSERT INTO comments (trip_id, user_id, content) VALUES (?, ?, ?)';
         connection.query(query, [commentData.trip_id, commentData.user_id, commentData.content], (err, result) => {
             if (err) {
                 if (err.code === 'ER_NO_REFERENCED_ROW_2') {
@@ -42,8 +42,8 @@ const commentController = {
 
         const query = `
             SELECT c.comment_id, c.trip_id, c.user_id, c.content, c.created_at, u.username
-            FROM Comments c
-            JOIN Users u ON c.user_id = u.user_id
+            FROM comments c
+            JOIN users u ON c.user_id = u.user_id
             WHERE c.trip_id = ?
             ORDER BY c.created_at DESC
         `;
@@ -61,7 +61,7 @@ const commentController = {
 
 
 
-    
+
 };
 
 module.exports = commentController;

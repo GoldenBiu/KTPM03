@@ -22,7 +22,7 @@ const ratingController = {
             score
         };
 
-        const query = 'INSERT INTO Ratings (trip_id, user_id, score) VALUES (?, ?, ?)';
+        const query = 'INSERT INTO ratings (trip_id, user_id, score) VALUES (?, ?, ?)';
         connection.query(query, [ratingData.trip_id, ratingData.user_id, ratingData.score], (err, result) => {
             if (err) {
                 if (err.code === 'ER_NO_REFERENCED_ROW_2') {
