@@ -18,6 +18,7 @@ router.delete('/trips/:trip_id', authMiddleware,tripController.deleteTrip);
 // Route mới: Lấy một hành trình
 router.get('/trips/:trip_id', tripController.getTripById);
 
-
+// Route mới: Xếp hạng hành trình theo lượt thích
+router.get('/trips/ranking/likes', tripController.getTripsByLikes);
 
 module.exports = router;

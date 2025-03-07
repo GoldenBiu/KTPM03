@@ -7,7 +7,7 @@ const generateToken = (user) => {
     return jwt.sign(
         { user_id: user.user_id, email: user.email },
         JWT_SECRET,
-        { expiresIn: '1h' }
+        { expiresIn: '7d' }
     );
 };
 
