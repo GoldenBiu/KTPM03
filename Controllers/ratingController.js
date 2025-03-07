@@ -38,7 +38,33 @@ const ratingController = {
             }
             res.status(500).json({ message: 'Lỗi server', error: err });
         }
-    }
+    },
+    getRatingsByUser: async (req, res) => {
+        const userId = req.user.user_id; // Lấy user_id từ token qua middleware
+    
+        try {
+            const [rows] = await connection.query(
+                `SELECT r.rating_id, r.trip_id, r.score, r.created_at,
+                        t.title AS trip_title
+                 FROM ratings r
+                 JOIN trips t ON r.trip_id = t.trip_id
+                 WHERE r.user_id = ?`,
+                [userId]
+            );
+    
+            if (rows.length === 0) {
+                return res.status(404).json({ message: 'Người dùng chưa có đánh giá nào' });
+            }
+    
+            res.json({
+                user_id: parseInt(userId),
+                ratings: rows
+            });
+        } catch (error) {
+            console.error('Lỗi lấy đánh giá:', error);
+            res.status(500).json({ message: 'Lỗi server', error: error.message });
+        }
+    }    
 };
 
 module.exports = ratingController;

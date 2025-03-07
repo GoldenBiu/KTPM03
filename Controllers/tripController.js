@@ -42,7 +42,7 @@ const tripController = {
     // Cập nhật hành trình
     updateTrip: async (req, res) => {
         try {
-            const user_id = req.user?.user_id;
+            const user_id = req.user.user_id;
             const { trip_id } = req.params;
             const { title, start_date, end_date, is_public } = req.body;
 
@@ -86,33 +86,7 @@ const tripController = {
     },
 
     // Lấy thông tin hành trình theo trip_id
-    getTripById: async (req, res) => {
-        try {
-            const { trip_id } = req.params;
-            if (!trip_id) return res.status(400).json({ message: 'Vui lòng cung cấp trip_id' });
-
-            // Lấy thông tin hành trình
-            const tripQuery = 'SELECT * FROM trips WHERE trip_id = ?';
-            const [tripResults] = await connection.execute(tripQuery, [trip_id]);
-
-            if (tripResults.length === 0) return res.status(404).json({ message: 'Không tìm thấy hành trình' });
-
-            // Lấy danh sách đánh giá
-            const ratingsQuery = `
-                SELECT r.rating_id, r.trip_id, r.user_id, r.score, r.created_at, u.username
-                FROM ratings r
-                JOIN users u ON r.user_id = u.user_id
-                WHERE r.trip_id = ?
-                ORDER BY r.created_at DESC
-            `;
-            const [ratingResults] = await connection.execute(ratingsQuery, [trip_id]);
-
-            res.json({ message: 'Lấy thông tin hành trình thành công', trip: tripResults[0], ratings: ratingResults });
-        } catch (err) {
-            console.error('Lỗi lấy hành trình theo ID:', err);
-            res.status(500).json({ message: 'Lỗi server', error: err });
-        }
-    },
+    
 
     // Lấy danh sách hành trình theo lượt thích
     getTripsByLikes: async (req, res) => {
@@ -134,7 +108,94 @@ const tripController = {
             console.error('Lỗi lấy danh sách hành trình theo lượt thích:', err);
             res.status(500).json({ message: 'Lỗi server', error: err });
         }
+    },
+
+    // Xếp hạng hành trình dựa trên lượt thích
+    rankTripsByLikes: async (req, res) => {
+        try {
+            // Lấy kết nối database
+            const db = await connection;
+
+            // Truy vấn xếp hạng hành trình theo lượt thích
+            const rankQuery = `
+                SELECT 
+                    t.trip_id,
+                    t.user_id,
+                    t.title,
+                    t.start_date,
+                    t.end_date,
+                    t.is_public,
+                    t.created_at,
+                    t.updated_at,
+                    COUNT(l.like_id) AS like_count
+                FROM Trips t
+                LEFT JOIN Likes l ON t.trip_id = l.trip_id
+                WHERE t.is_public = 1
+                GROUP BY t.trip_id, t.user_id, t.title, t.start_date, t.end_date, t.is_public, t.created_at, t.updated_at
+                ORDER BY like_count DESC
+            `;
+            const [rows] = await db.query(rankQuery);
+
+            // Trả về danh sách hành trình đã xếp hạng
+            return res.json({
+                message: 'Xếp hạng hành trình theo lượt thích thành công',
+                trips: rows
+            });
+        } catch (err) {
+            console.error('Lỗi trong rankTripsByLikes:', err);
+            return res.status(500).json({
+                message: 'Lỗi server',
+                error: err.message || 'Lỗi không xác định'
+            });
+        }
+    },
+
+    getTripsByUser: async (req, res) => {
+        const userId = req.user.user_id;
+            try {
+                const [rows] = await connection.query(
+                    `SELECT t.trip_id, t.title, t.created_at
+                    FROM trips t
+                    WHERE t.user_id = ?`,
+                    [userId]
+                );
+    
+            if (rows.length === 0) {
+                return res.status(404).json({ message: 'Người dùng chưa có hành trình nào' });
+            }
+    
+            res.json({
+                user_id: parseInt(userId),
+                trips: rows
+            });
+        } catch (error) {
+            console.error('Lỗi lấy danh sách hành trình:', error);
+            res.status(500).json({ message: 'Lỗi server', error: error.message });
+        }
+    },
+    getTripById: async (req, res) => {
+        const userId = req.user.user_id;
+            try {
+                const [rows] = await connection.query(
+                    `SELECT t.trip_id, t.title, t.created_at
+                    FROM trips t
+                    WHERE t.user_id = ?`,
+                    [userId]
+                );
+    
+            if (rows.length === 0) {
+                return res.status(404).json({ message: 'Người dùng chưa có hành trình nào' });
+            }
+    
+            res.json({
+                user_id: parseInt(userId),
+                trips: rows
+            });
+        } catch (error) {
+            console.error('Lỗi lấy danh sách hành trình:', error);
+            res.status(500).json({ message: 'Lỗi server', error: error.message });
+        }
     }
-};
+}
 
 module.exports = tripController;

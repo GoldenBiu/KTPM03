@@ -5,5 +5,6 @@ const authMiddleware = require('../middleware/authMiddleware');
 
 // Route Toggle Like (yêu cầu đăng nhập)
 router.post('/likes', authMiddleware, likeController.toggleLike);
+router.get('/likes', authMiddleware, likeController.getLikedTripsByUser);
 
 module.exports = router;
