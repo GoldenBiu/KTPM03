@@ -13,7 +13,7 @@ connection.connect((err) => {
         console.error('Lỗi kết nối MySQL: ' + err.stack);
         return;
     }
-    console.log('Đã kết nối MySQL');
+    console.log('Đã kết nối MySQL rồi đó');
 });
 
 module.exports = connection.promise();;
