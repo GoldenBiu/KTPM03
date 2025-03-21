@@ -56,7 +56,7 @@ const tagController = {
     getAllTags: async (req, res) => {
         try {
             const db = await connection;
-            const selectQuery = 'SELECT * FROM Tags';
+            const selectQuery = 'SELECT * FROM tags';
             const [rows] = await db.query(selectQuery);
 
             return res.json({
@@ -142,7 +142,7 @@ const tagController = {
             const db = await connection;
 
             // Kiểm tra tag có tồn tại không
-            const checkQuery = 'SELECT * FROM Tags WHERE tag_id = ?';
+            const checkQuery = 'SELECT * FROM tags WHERE tag_id = ?';
             const [rows] = await db.query(checkQuery, [tag_id]);
 
             if (rows.length === 0) {

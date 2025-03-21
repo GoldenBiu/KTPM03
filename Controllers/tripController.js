@@ -46,7 +46,7 @@ const tripController = {
             const { trip_id } = req.params;
             const { title, start_date, end_date, is_public } = req.body;
 
-            if (!user_id) return res.status(401).json({ message: 'Người dùng chưa xác thực' });
+            if (!user_id) return res.status(401).json({ message: 'Bạn không thể sửa bài viết này!' });
             if (!trip_id) return res.status(400).json({ message: 'Vui lòng cung cấp trip_id' });
 
             const query = `
@@ -55,7 +55,7 @@ const tripController = {
             `;
             const [result] = await connection.execute(query, [title, start_date, end_date, is_public, trip_id, user_id]);
 
-            if (result.affectedRows === 0) return res.status(404).json({ message: 'Không tìm thấy hành trình hoặc không có quyền chỉnh sửa' });
+            if (result.affectedRows === 0) return res.status(404).json({ message: 'Bạn không thể sửa bài viết này!' });
 
             res.json({ message: 'Cập nhật hành trình thành công' });
         } catch (err) {
@@ -174,21 +174,20 @@ const tripController = {
         }
     },
     getTripById: async (req, res) => {
-        const userId = req.user.user_id;
-            try {
+        const { trip_id } = req.params;
+        try {
                 const [rows] = await connection.query(
                     `SELECT t.trip_id, t.title, t.created_at
                     FROM trips t
-                    WHERE t.user_id = ?`,
-                    [userId]
+                    WHERE t.trip_id = ?`,
+                    [trip_id]
                 );
     
             if (rows.length === 0) {
-                return res.status(404).json({ message: 'Người dùng chưa có hành trình nào' });
+                return res.status(404).json({ message: 'Không tìm thấy hành trình' });
             }
     
             res.json({
-                user_id: parseInt(userId),
                 trips: rows
             });
         } catch (error) {

@@ -6,7 +6,7 @@ const authMiddleware = require('../middleware/authMiddleware');
 router.post('/comments', authMiddleware, commentController.addComment);
 
 
-router.get('/comments/trip/:trip_id', commentController.getCommentsByTripId);
+router.get('/comments/trip/:trip_id',authMiddleware, commentController.getCommentsByTripId);
 
 
 module.exports = router;
