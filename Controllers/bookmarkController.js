@@ -48,6 +48,31 @@ const bookmarkController = {
                 error: err.message || 'Lỗi không xác định'
             });
         }
+    },
+    getAllBookmarks: async (req, res) => {
+        try {
+            const user_id = req.user.user_id;
+
+            if (!user_id) {
+                return res.status(401).json({ message: 'Người dùng chưa xác thực' });
+            }   
+
+            const db = await connection;
+
+            const query = 'SELECT * FROM bookmarks WHERE user_id = ?';
+            const [results] = await db.query(query, [user_id]);
+
+            res.json({
+                message: 'Lấy tất cả bookmark thành công',
+                bookmarks: results
+            });
+        } catch (err) {
+            console.error('Lỗi trong getAllBookmarks:', err);
+            res.status(500).json({
+                message: 'Lỗi server',
+                error: err.message || 'Lỗi không xác định'
+            });
+        }
     }
 };
 
