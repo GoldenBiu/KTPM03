@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const port = 3000;
+const port = 6000;
 const fs = require('fs');
 const path = require('path');
 const multer = require('multer');
@@ -17,7 +17,8 @@ const bookmarkRoutes = require('./routes/bookmark');
 const tagRoutes = require('./routes/tag');
 const destinationsRouter = require('./routes/destinations');
 const mediaRoutes = require('./routes/media');
-
+const cors = require('cors');
+app.use(cors());
 // Middleware để parse JSON
 app.use(express.json());
 
