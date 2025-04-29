@@ -30,7 +30,7 @@ app.use('/api', ratingRoutes);
 app.use('/api', likeRoutes);
 app.use('/api', bookmarkRoutes);
 app.use('/api', tagRoutes);
-app.use('/destinations', destinationsRouter);
+app.use('/api', destinationsRouter);
 app.use('/api', mediaRoutes);
 
 // Cấu hình để phục vụ file tĩnh từ thư mục uploads

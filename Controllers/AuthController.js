@@ -74,7 +74,7 @@ const authController = {
         }
     },
     getUserById: async (req, res) => {
-        const user_id = req.user.user_id; // Lấy user_id từ token qua middleware
+        const user_id = req.user.user_id; // Lấy user_id từ token đã xác thực
 
 
         try {

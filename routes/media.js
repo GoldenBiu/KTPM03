@@ -3,6 +3,8 @@ const router = express.Router();
 const multer = require('multer');
 const fs = require('fs');
 const path = require('path');
+const connection = require('../config/db');
+
 
 const uploadDir = 'uploads/';
 // Tạo thư mục nếu chưa có
@@ -36,24 +38,106 @@ const upload = multer({
 
 // ✅ API Upload ảnh & video
 router.post('/upload', (req, res) => {
-    upload(req, res, function (err) {
-        if (err) {
-            return res.status(400).json({ error: err.message });
-        }
+    upload(req, res, async function (err) {
+        if (err) return res.status(400).json({ error: err.message });
 
-        if (!req.files || (!req.files['images'] && !req.files['videos'])) {
-            return res.status(400).json({ error: 'Không có file nào được upload' });
-        }
+        const { trip_id, name, description, latitude, longitude } = req.body;
 
-        const images = req.files['images'] ? req.files['images'].map(file => file.filename) : [];
-        const videos = req.files['videos'] ? req.files['videos'].map(file => file.filename) : [];
+        // 1. Insert vào bảng destinations
+        const insertDestination = `INSERT INTO destinations (trip_id, name, description, latitude, longitude, created_at)
+                                VALUES (?, ?, ?, ?, ?, NOW())`;
 
-        res.status(200).json({
-            message: 'Upload thành công!',
-            images: images,
-            videos: videos
+        connection.query(insertDestination, [trip_id, name, description, latitude, longitude], (err, result) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ error: 'Lỗi khi lưu destination' });
+            }
+
+            const destination_id = result.insertId;
+
+            // 2. Lưu media tương ứng nếu có file
+            const files = {
+                images: req.files['images'] || [],
+                videos: req.files['videos'] || []
+            };
+
+            const insertMedia = `INSERT INTO media (destination_id, media_url, media_type, caption)
+                                 VALUES (?, ?, ?, ?)`;
+
+            files.images.forEach(file => {
+                connection.query(insertMedia, [destination_id, `/uploads/${file.filename}`, 'image', file.originalname]);
+            });
+
+            files.videos.forEach(file => {
+                connection.query(insertMedia, [destination_id, `/uploads/${file.filename}`, 'video', file.originalname]);
+            });
+
+            res.status(200).json({
+                message: 'Lưu destination và media thành công!',
+                destination_id,
+                uploaded: {
+                    images: files.images.map(f => f.filename),
+                    videos: files.videos.map(f => f.filename)
+                }
+            });
         });
     });
 });
+router.get('/destinations', async (req, res) => {
+    try {
+        const destinationsQuery = `
+            SELECT * FROM destinations
+            ORDER BY created_at DESC
+        `;
+
+        connection.query(destinationsQuery, (err, destinations) => {
+            if (err) {
+                console.error(err);
+                return res.status(500).json({ error: 'Lỗi khi lấy danh sách điểm đến' });
+            }
+
+            // Nếu không có điểm đến nào
+            if (destinations.length === 0) {
+                return res.status(200).json([]);
+            }
+
+            // Lấy tất cả destination_id
+            const ids = destinations.map(d => d.destination_id);
+
+            const mediaQuery = `
+                SELECT * FROM media
+                WHERE destination_id IN (?)
+            `;
+
+            connection.query(mediaQuery, [ids], (err, mediaResults) => {
+                if (err) {
+                    console.error(err);
+                    return res.status(500).json({ error: 'Lỗi khi lấy media' });
+                }
+
+                // Nhóm media theo destination_id
+                const mediaByDestination = {};
+                mediaResults.forEach(media => {
+                    if (!mediaByDestination[media.destination_id]) {
+                        mediaByDestination[media.destination_id] = [];
+                    }
+                    mediaByDestination[media.destination_id].push(media);
+                });
+
+                // Gộp media vào mỗi destination
+                const result = destinations.map(dest => ({
+                    ...dest,
+                    media: mediaByDestination[dest.destination_id] || []
+                }));
+
+                res.status(200).json(result);
+            });
+        });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Lỗi máy chủ' });
+    }
+});
+
 
 module.exports = router;

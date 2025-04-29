@@ -6,9 +6,9 @@ const path = require("path");
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         if (file.mimetype.startsWith("image/")) {
-            cb(null, "uploads/images/");
+            cb(null, "uploads/");
         } else if (file.mimetype.startsWith("video/")) {
-            cb(null, "uploads/videos/");
+            cb(null, "uploads/");
         } else {
             cb(new Error("Định dạng file không hợp lệ"), false);
         }
@@ -32,13 +32,23 @@ const createDestination = async (req, res) => {
             return res.status(400).json({ error: err.message });
         }
 
-        const { trip_id, name, description, latitude, longitude, tags } = req.body;
+        let { trip_id, name, description, latitude, longitude, tags } = req.body;
+        const user_id = req.user.user_id;
+        console.log(user_id)
+        // Bỏ bắt buộc tags, chỉ parse nếu tồn tại
+        if (tags) {
+            try {
+                tags = JSON.parse(tags);
+                if (!Array.isArray(tags)) {
+                    return res.status(400).json({ error: 'tags phải là một mảng' });
+                }
+            } catch (e) {
+                return res.status(400).json({ error: 'tags không hợp lệ (không phải JSON)' });
+            }
+        }
 
         if (!trip_id || !name) {
             return res.status(400).json({ error: 'trip_id và name là bắt buộc' });
-        }
-        if (tags && !Array.isArray(tags)) {
-            return res.status(400).json({ error: 'tags phải là một mảng' });
         }
 
         try {
@@ -53,9 +63,9 @@ const createDestination = async (req, res) => {
 
             // Thêm vào bảng Destinations
             const [result] = await connection.query(
-                `INSERT INTO destinations (trip_id, name, description, latitude, longitude)
-                VALUES (?, ?, ?, ?, ?)`,
-                [trip_id, name, description || null, latitude || null, longitude || null]
+                `INSERT INTO destinations (trip_id, name, description, latitude, longitude, user_id)
+                 VALUES (?, ?, ?, ?, ?, ?)`,
+                [trip_id, name, description || null, latitude || null, longitude || null, user_id || null]
             );
             const destinationId = result.insertId;
 
@@ -83,7 +93,7 @@ const createDestination = async (req, res) => {
             if (req.files["images"]) {
                 for (let img of req.files["images"]) {
                     await connection.query(
-                        "INSERT INTO media (destination_id, file_path, media_type) VALUES (?, ?, ?)",
+                        "INSERT INTO media (destination_id, media_url, media_type) VALUES (?, ?, ?)",
                         [destinationId, img.path, "image"]
                     );
                 }
@@ -93,7 +103,7 @@ const createDestination = async (req, res) => {
             if (req.files["video"]) {
                 const video = req.files["video"][0];
                 await connection.query(
-                    "INSERT INTO media (destination_id, file_path, media_type) VALUES (?, ?, ?)",
+                    "INSERT INTO media (destination_id, media_url, media_type) VALUES (?, ?, ?)",
                     [destinationId, video.path, "video"]
                 );
             }
@@ -154,8 +164,32 @@ const getDestination = async (req, res) => {
         res.status(500).json({ error: 'Lỗi khi lấy thông tin điểm đến' });
     }
 };
+const getPostsByUserId = async (req, res) => {
+    const user_id = req.user.user_id;
+
+    try {
+        // Truy vấn để lấy bài viết của user_id
+        const [destinations] = await connection.query(
+            `SELECT d.*, m.media_url AS image_path 
+            FROM destinations d
+            LEFT JOIN media m ON d.destination_id = m.destination_id
+            WHERE d.user_id = ?`,
+            [user_id]
+        );
+
+        if (destinations.length === 0) {
+            return res.status(404).json({ error: 'Không tìm thấy bài viết của người dùng này.' });
+        }
+
+        res.status(200).json({ destinations });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message || 'Lỗi khi lấy bài viết' });
+    }
+};
 
 module.exports = {
     createDestination,
-    getDestination
+    getDestination,
+    getPostsByUserId
 };
