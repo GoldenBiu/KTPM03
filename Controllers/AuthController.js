@@ -100,10 +100,6 @@ const authController = {
     },
     // Cập nhật thông tin người dùng
     updateUser: async (req, res) => {
-        console.log('Token User ID:', req.user); // Log toàn bộ thông tin user từ token
-        console.log('Route User ID:', req.params.id); // Log ID từ route
-        console.log('Request Body:', req.body); // Log dữ liệu gửi lên
-
         const token_user_id = req.user.user_id; // Lấy user_id từ token đã xác thực
         const route_user_id = req.params.id; // Lấy user_id từ route parameter
 

@@ -187,9 +187,29 @@ const getPostsByUserId = async (req, res) => {
         res.status(500).json({ error: error.message || 'Lỗi khi lấy bài viết' });
     }
 };
+const getAllDestinations = async (req, res) => {
+    try {
+        // Truy vấn để lấy tất cả các điểm đến
+        const [destinations] = await connection.query(
+            `SELECT d.*, m.media_url AS image_path 
+            FROM destinations d
+            LEFT JOIN media m ON d.destination_id = m.destination_id`
+        );
+
+        if (destinations.length === 0) {
+            return res.status(404).json({ error: 'Không tìm thấy điểm đến nào.' });
+        }
+
+        res.status(200).json({ destinations });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error.message || 'Lỗi khi lấy điểm đến' });
+    }
+};
 
 module.exports = {
     createDestination,
     getDestination,
-    getPostsByUserId
+    getPostsByUserId,
+    getAllDestinations
 };

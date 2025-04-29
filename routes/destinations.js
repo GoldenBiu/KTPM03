@@ -6,5 +6,5 @@ const authMiddleware = require('../middleware/authMiddleware');
 router.post('/Destinations', authMiddleware,destinationsController.createDestination); // POST /destinations
 router.get('/Destinations/:id',authMiddleware, destinationsController.getDestination);  // GET /destinations/:id
 router.get('/getPostsByUserId',authMiddleware, destinationsController.getPostsByUserId); // GET /destinations
-
+router.get('/getAllDestinations',authMiddleware, destinationsController.getAllDestinations); // GET /destinations
 module.exports = router;
