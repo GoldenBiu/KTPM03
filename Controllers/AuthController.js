@@ -97,6 +97,79 @@ const authController = {
         } catch (error) {
             res.status(500).json({ message: 'Lỗi server', error: error.message });
         }
+    },
+    // Cập nhật thông tin người dùng
+    updateUser: async (req, res) => {
+        console.log('Token User ID:', req.user); // Log toàn bộ thông tin user từ token
+        console.log('Route User ID:', req.params.id); // Log ID từ route
+        console.log('Request Body:', req.body); // Log dữ liệu gửi lên
+
+        const token_user_id = req.user.user_id; // Lấy user_id từ token đã xác thực
+        const route_user_id = req.params.id; // Lấy user_id từ route parameter
+
+        // Kiểm tra xem người dùng có quyền cập nhật hồ sơ này không
+        if (token_user_id !== parseInt(route_user_id)) {
+            console.log(`Unauthorized update attempt: Token ID ${token_user_id} vs Route ID ${route_user_id}`);
+            return res.status(403).json({ 
+                message: 'Bạn không có quyền cập nhật hồ sơ này',
+                token_user_id: token_user_id,
+                route_user_id: route_user_id
+            });
+        }
+
+        const { username, profile_image, bio } = req.body;
+
+        // Kiểm tra xem có thông tin để cập nhật không
+        if (!username && !profile_image && !bio) {
+            return res.status(400).json({ message: 'Không có thông tin để cập nhật' });
+        }
+
+        try {
+            // Chuẩn bị truy vấn cập nhật
+            const updateFields = [];
+            const updateValues = [];
+
+            if (username) {
+                updateFields.push('username = ?');
+                updateValues.push(username);
+            }
+            if (profile_image) {
+                updateFields.push('profile_image = ?');
+                updateValues.push(profile_image);
+            }
+            if (bio) {
+                updateFields.push('bio = ?');
+                updateValues.push(bio);
+            }
+
+            // Thêm user_id vào cuối mảng giá trị
+            updateValues.push(token_user_id);
+
+            // Thực hiện cập nhật
+            const updateQuery = `UPDATE users SET ${updateFields.join(', ')} WHERE user_id = ?`;
+            console.log('Update Query:', updateQuery);
+            console.log('Update Values:', updateValues);
+
+            const [result] = await connection.query(updateQuery, updateValues);
+
+            if (result.affectedRows === 0) {
+                return res.status(404).json({ message: 'Không tìm thấy người dùng để cập nhật' });
+            }
+            
+            res.set('Content-Type', 'application/json; charset=utf-8');
+            res.json({ 
+                message: 'Cập nhật thông tin người dùng thành công',
+                updatedFields: updateFields
+            });
+
+        } catch (error) {
+            console.error('Update Error:', error);
+            // Kiểm tra lỗi trùng lặp username (nếu có)
+            if (error.code === 'ER_DUP_ENTRY') {
+                return res.status(400).json({ message: 'Username đã tồn tại' });
+            }
+            res.status(500).json({ message: 'Lỗi server', error: error.message });
+        }
     }
 };
 

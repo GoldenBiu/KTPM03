@@ -12,4 +12,7 @@ router.post('/login', authController.login);
 // Route Lấy dữ liệu người dùng theo user_id
 router.get('/users/', authMiddleware,authController.getUserById);
 
+// Route Cập nhật thông tin người dùng
+router.put('/users/:id', authMiddleware, authController.updateUser);
+
 module.exports = router;

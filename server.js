@@ -23,9 +23,9 @@ app.use(cors());
 app.use(express.json());
 
 // Sử dụng routes
+app.use('/api', authRoutes);
 app.use('/api', tripRoutes);
 app.use('/api', commentRoutes);
-app.use('/api', authRoutes);
 app.use('/api', ratingRoutes);
 app.use('/api', likeRoutes);
 app.use('/api', bookmarkRoutes);
