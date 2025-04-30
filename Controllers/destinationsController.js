@@ -153,7 +153,7 @@ const getDestination = async (req, res) => {
 
         // Lấy danh sách media
         const [media] = await connection.query(
-            `SELECT file_path, media_type FROM media WHERE destination_id = ?`,
+            `SELECT media_url, media_type FROM media WHERE destination_id = ?`,
             [id]
         );
         destination.media = media;
