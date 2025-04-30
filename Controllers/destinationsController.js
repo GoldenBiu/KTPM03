@@ -168,17 +168,22 @@ const getPostsByUserId = async (req, res) => {
     const user_id = req.user.user_id;
 
     try {
-        // Truy vấn để lấy bài viết của user_id
         const [destinations] = await connection.query(
-            `SELECT d.*, m.media_url AS image_path 
-            FROM destinations d
-            LEFT JOIN media m ON d.destination_id = m.destination_id
-            WHERE d.user_id = ?`,
+            `SELECT * FROM destinations WHERE user_id = ?`,
             [user_id]
         );
 
         if (destinations.length === 0) {
             return res.status(404).json({ error: 'Không tìm thấy bài viết của người dùng này.' });
+        }
+
+        // Gắn media cho từng destination
+        for (let destination of destinations) {
+            const [media] = await connection.query(
+                `SELECT media_url, media_type FROM media WHERE destination_id = ?`,
+                [destination.destination_id]
+            );
+            destination.media = media;
         }
 
         res.status(200).json({ destinations });
@@ -187,17 +192,22 @@ const getPostsByUserId = async (req, res) => {
         res.status(500).json({ error: error.message || 'Lỗi khi lấy bài viết' });
     }
 };
+
 const getAllDestinations = async (req, res) => {
     try {
-        // Truy vấn để lấy tất cả các điểm đến
-        const [destinations] = await connection.query(
-            `SELECT d.*, m.media_url AS image_path 
-            FROM destinations d
-            LEFT JOIN media m ON d.destination_id = m.destination_id`
-        );
+        const [destinations] = await connection.query(`SELECT * FROM destinations`);
 
         if (destinations.length === 0) {
             return res.status(404).json({ error: 'Không tìm thấy điểm đến nào.' });
+        }
+
+        // Lấy media cho từng destination
+        for (let destination of destinations) {
+            const [media] = await connection.query(
+                `SELECT media_url, media_type FROM media WHERE destination_id = ?`,
+                [destination.destination_id]
+            );
+            destination.media = media;
         }
 
         res.status(200).json({ destinations });
@@ -206,6 +216,7 @@ const getAllDestinations = async (req, res) => {
         res.status(500).json({ error: error.message || 'Lỗi khi lấy điểm đến' });
     }
 };
+
 
 module.exports = {
     createDestination,
