@@ -195,6 +195,28 @@ const tripController = {
             console.error('Lỗi lấy danh sách hành trình:', error);
             res.status(500).json({ message: 'Lỗi server', error: error.message });
         }
+    },
+    getdetailtrip: async (req, res) => {
+        const { trip_id } = req.params;
+        try {
+            const [rows] = await connection.query(
+                `SELECT t.trip_id, t.title, t.start_date, t.end_date, t.is_public, t.created_at, t.updated_at
+                FROM trips t
+                WHERE t.trip_id = ?`,
+                [trip_id]
+            );
+
+            if (rows.length === 0) {
+                return res.status(404).json({ message: 'Không tìm thấy hành trình' });
+            }
+
+            res.json({
+                trip: rows[0]
+            });
+        } catch (error) {
+            console.error('Lỗi lấy thông tin hành trình:', error);
+            res.status(500).json({ message: 'Lỗi server', error: error.message });
+        }
     }
 }
 

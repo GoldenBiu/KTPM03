@@ -27,4 +27,7 @@ router.get('/trips/ranking/likes', tripController.rankTripsByLikes);
 // Lấy danh sách hành trình theo user_id
 router.get('/trips/user/', authMiddleware, tripController.getTripsByUser);
 
+// Lấy danh sách hành trình theo user_id và trip_id
+router.get('/detailtrips/:trip_id', authMiddleware, tripController.getdetailtrip);
+
 module.exports = router;
