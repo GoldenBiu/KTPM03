@@ -156,7 +156,12 @@ const getDestination = async (req, res) => {
             `SELECT media_url, media_type FROM media WHERE destination_id = ?`,
             [id]
         );
-        destination.media = media;
+
+        // Thêm prefix
+        destination.media = media.map(m => ({
+            ...m,
+            media_url: `https://ktpm03.onrender.com/${m.media_url}`
+        }));
 
         res.json(destination);
     } catch (error) {
@@ -164,6 +169,7 @@ const getDestination = async (req, res) => {
         res.status(500).json({ error: 'Lỗi khi lấy thông tin điểm đến' });
     }
 };
+
 const getPostsByUserId = async (req, res) => {
     const user_id = req.user.user_id;
 
@@ -177,13 +183,15 @@ const getPostsByUserId = async (req, res) => {
             return res.status(404).json({ error: 'Không tìm thấy bài viết của người dùng này.' });
         }
 
-        // Gắn media cho từng destination
         for (let destination of destinations) {
             const [media] = await connection.query(
                 `SELECT media_url, media_type FROM media WHERE destination_id = ?`,
                 [destination.destination_id]
             );
-            destination.media = media;
+            destination.media = media.map(m => ({
+                ...m,
+                media_url: `https://ktpm03.onrender.com/${m.media_url}`
+            }));
         }
 
         res.status(200).json({ destinations });
@@ -201,13 +209,15 @@ const getAllDestinations = async (req, res) => {
             return res.status(404).json({ error: 'Không tìm thấy điểm đến nào.' });
         }
 
-        // Lấy media cho từng destination
         for (let destination of destinations) {
             const [media] = await connection.query(
                 `SELECT media_url, media_type FROM media WHERE destination_id = ?`,
                 [destination.destination_id]
             );
-            destination.media = media;
+            destination.media = media.map(m => ({
+                ...m,
+                media_url: `https://ktpm03.onrender.com/${m.media_url}`
+            }));
         }
 
         res.status(200).json({ destinations });
@@ -216,6 +226,7 @@ const getAllDestinations = async (req, res) => {
         res.status(500).json({ error: error.message || 'Lỗi khi lấy điểm đến' });
     }
 };
+
 
 
 module.exports = {
