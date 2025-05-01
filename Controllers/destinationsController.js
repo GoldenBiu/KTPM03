@@ -225,6 +225,7 @@ const getAllDestinations = async (req, res) => {
         console.error(error);
         res.status(500).json({ error: error.message || 'Lỗi khi lấy điểm đến' });
     }
+    
 };
 
 
