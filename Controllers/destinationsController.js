@@ -206,7 +206,7 @@ const getAllDestinations = async (req, res) => {
         const [destinations] = await connection.query(`SELECT * FROM destinations`);
 
         if (destinations.length === 0) {
-            return res.status(404).json({ message: 'Không tìm thấy điểm đến nào.' });
+            return res.status(200).json({ message: 'Không tìm thấy điểm đến nào.' });
         }
 
         for (let destination of destinations) {
